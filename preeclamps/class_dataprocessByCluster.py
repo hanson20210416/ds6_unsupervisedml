@@ -10,14 +10,27 @@ import pandas as pd
 
 
 class Clustering:
-    def __init__(self, data, cluster_type='kmeans', n_clusters=3, n_init=10, max_iter=300):
+    def __init__(self, data, cluster_type='kmeans', n_clusters=3, n_init=10, 
+                 max_iter=300, bandwidth=None):
+        """
+        A flexible clustering class supporting multiple clustering algorithms.
+
+        Parameters:
+            data (array-like): Input data for clustering.
+            cluster_type (str): Type of clustering algorithm.
+            n_clusters (int): Number of clusters (if applicable).
+            n_init (int): Number of initializations for k-means.
+            max_iter (int): Maximum iterations for convergence.
+            bandwidth (float): Bandwidth parameter for MeanShift.
+        """
         self.data = data
         self.cluster_type = cluster_type.lower()
         self.n_clusters = n_clusters
         self.n_init = n_init
         self.max_iter = max_iter
+        self.bandwidth = bandwidth  # Added bandwidth parameter
 
-    def scale_and_reduce(self,n_components=3):
+    def scale_and_reduce(self, n_components=3):
         scaler = StandardScaler()
         pca = PCA(n_components=n_components)
         self.data = pca.fit_transform(scaler.fit_transform(self.data))
@@ -26,7 +39,7 @@ class Clustering:
         clustering_algorithms = {
             'kmeans': KMeans(n_clusters=self.n_clusters, n_init=self.n_init, max_iter=self.max_iter),
             'agglomerative': AgglomerativeClustering(n_clusters=self.n_clusters),
-            'meanshift': MeanShift(),
+            'meanshift': MeanShift(bandwidth=self.bandwidth),
             'birch': Birch(n_clusters=self.n_clusters),
             'affinity': AffinityPropagation(),
             'bisectingkmeans': BisectingKMeans(n_clusters=self.n_clusters)
@@ -43,10 +56,11 @@ class Clustering:
     def evaluate(self):
         if hasattr(self.model, 'labels_') and len(set(self.model.labels_)) > 1:
             score = silhouette_score(self.data, self.model.labels_)
-            print(f"the {self.cluster_type} clustering method")
+            print(f"The {self.cluster_type} clustering method")
             print(f"Silhouette Score: {score:.2f}")
         else:
             print("Silhouette score not applicable for this clustering method.")
+
 
 
 if __name__ == "__main__":
